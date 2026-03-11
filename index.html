@@ -47,6 +47,7 @@ h2 {
   justify-content: center;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
   transition: all 0.2s ease;
 }
 
@@ -83,6 +84,17 @@ button {
 button:hover {
   background-color: #0056b3;
   box-shadow: 0 3px 9px rgba(0,86,179,0.6);
+}
+
+#speedControl {
+  width: 150px;
+}
+
+#speedValue {
+  font-weight: 600;
+  font-size: 16px;
+  min-width: 40px;
+  text-align: center;
 }
 
 .spacer { height: 0px; }
@@ -203,6 +215,8 @@ video {
     <div class="input-group">
       <textarea id="videoUrls" rows="4" placeholder="Paste video URLs (one per line)"></textarea>
       <button onclick="loadVideos()">Load Videos</button>
+      <input type="range" id="speedControl" min="0.25" max="5" step="0.01" value="1">
+      <span id="speedValue">1×</span>
     </div>
   </div>
 </div>
@@ -221,7 +235,6 @@ video {
 </div>
 
 <script>
-
 // Intersection Observer for autoplay
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
@@ -231,20 +244,45 @@ const observer = new IntersectionObserver((entries) => {
   });
 }, { threshold: 0.6 });
 
-function loadVideos() {
+const speedControl = document.getElementById('speedControl');
+const speedValue = document.getElementById('speedValue');
 
+// Fixed steps for snapping
+const snapSteps = [];
+for(let s = 0.25; s <= 5; s += 0.25) snapSteps.push(parseFloat(s.toFixed(2)));
+
+function snapSpeed(value) {
+  let closest = snapSteps.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
+  return closest;
+}
+
+// Update playback speed of all videos
+function updatePlaybackSpeed() {
+  const rawValue = parseFloat(speedControl.value);
+  const snapped = snapSpeed(rawValue);
+  speedControl.value = snapped;
+  speedValue.textContent = snapped + "×";
+
+  const videos = document.querySelectorAll('#videoList video');
+  videos.forEach(video => video.playbackRate = snapped);
+}
+
+speedControl.addEventListener('input', updatePlaybackSpeed);
+
+function loadVideos() {
   const text = document.getElementById("videoUrls").value.trim();
   if(!text) return;
 
   const urls = text.split("\n");
   const container = document.getElementById("videoList");
 
-  // FIX: clear previous videos
+  // clear previous videos
   observer.disconnect();
   container.innerHTML = "";
 
-  urls.forEach((url, index) => {
+  const speed = snapSpeed(parseFloat(speedControl.value));
 
+  urls.forEach((url, index) => {
     const clean = url.trim();
     if(!clean) return;
 
@@ -260,9 +298,9 @@ function loadVideos() {
     video.src = clean;
     video.controls = true;
     video.loading = "lazy";
+    video.playbackRate = speed;
 
     observer.observe(video);
-
     wrapper.appendChild(video);
 
     const urlBox = document.createElement("div");
@@ -275,7 +313,6 @@ function loadVideos() {
 
     const copyBtn = document.createElement("button");
     copyBtn.textContent = "Copy";
-
     copyBtn.onclick = () => {
       navigator.clipboard.writeText(clean);
       copyBtn.textContent = "Copied!";
@@ -286,9 +323,7 @@ function loadVideos() {
     urlBox.appendChild(copyBtn);
 
     wrapper.appendChild(urlBox);
-
     container.appendChild(wrapper);
-
   });
 
   if(!window.headerScrollListenerAdded){
@@ -307,9 +342,7 @@ const button = document.querySelector(".input-group button");
 const backToTopContainer = document.getElementById("backToTopContainer");
 
 function handleScroll() {
-
   const scrollY = window.scrollY;
-
   const initialPadding=25, minPadding=5;
   headerContainer.style.padding = Math.max(initialPadding - scrollY, minPadding) + "px 20px";
 
@@ -320,6 +353,7 @@ function handleScroll() {
   const fontInitial=16, fontMin=12;
   textarea.style.fontSize = Math.max(fontInitial - scrollY/10, fontMin) + "px";
   button.style.fontSize = Math.max(fontInitial - scrollY/10, fontMin) + "px";
+  speedControl.style.height = Math.max(fontMin, fontInitial - scrollY/10) + "px";
 
   const maxHeightInitial=150, maxHeightMin=80;
   textarea.style.maxHeight = Math.max(maxHeightInitial - scrollY, maxHeightMin) + "px";
@@ -332,10 +366,7 @@ function handleScroll() {
 
 // Spacer
 const spacer = document.querySelector('.spacer');
-
-function adjustSpacer(){
-  spacer.style.height = headerContainer.offsetHeight + 'px';
-}
+function adjustSpacer(){ spacer.style.height = headerContainer.offsetHeight + 'px'; }
 
 window.addEventListener('load', adjustSpacer);
 window.addEventListener('resize', adjustSpacer);
@@ -344,7 +375,6 @@ window.addEventListener('resize', adjustSpacer);
 backToTopContainer.addEventListener('click', () => {
   window.scrollTo({top:0, behavior:'smooth'});
 });
-
 </script>
 
 </body>
