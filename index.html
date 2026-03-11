@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Video Viewer</title>
+<style>
+body {
+  background: #f5f6fa;
+  color: #333;
+  font-family: Arial, sans-serif;
+  margin: 0;
+}
+
+.header-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: #fff;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
+  padding: 25px 20px;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.header {
+  max-width: 900px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+h2 {
+  margin: 0 0 10px 0;
+  text-align: center;
+  font-weight: 700;
+  font-size: 28px;
+  color: #222;
+  transition: all 0.2s ease, opacity 0.2s ease;
+}
+
+.input-group {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+textarea {
+  width: 70%;
+  padding: 12px;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  resize: vertical;
+  max-height: 150px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+  color: #333;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+  font-family: inherit;
+}
+
+textarea::placeholder { color: #999; }
+
+button {
+  padding: 8px 18px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  border: none;
+  background-color: #007bff;
+  color: #fff;
+  border-radius: 6px;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0,123,255,0.4);
+}
+
+button:hover {
+  background-color: #0056b3;
+  box-shadow: 0 3px 9px rgba(0,86,179,0.6);
+}
+
+.spacer { height: 0px; }
+
+.container {
+  max-width: 900px;
+  margin: auto;
+  margin-top: 30px;
+  padding: 0 10px;
+}
+
+.video-item {
+  margin-bottom: 40px;
+  border-radius: 8px;
+  background: #fff;
+  padding: 10px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+.video-label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #000;
+  font-size: 16px;
+  text-align: center;
+}
+
+video {
+  width: 100%;
+  max-height: 500px;
+  background: #000;
+  border-radius: 6px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.15);
+}
+
+.url-box {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.url-text {
+  font-size: 12px;
+  color: #555;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: calc(100% - 60px);
+}
+
+.url-box button {
+  padding: 4px 8px;
+  font-size: 12px;
+  background-color: #007bff;
+  color: white;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.url-box button:hover { background-color: #0056b3; }
+
+#backToTopContainer {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 1100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+#backToTopContainer.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#backToTop {
+  width: 48px;
+  height: 48px;
+  background-color: #007bff;
+  border-radius: 50%;
+  box-shadow: 0 4px 8px rgba(0,123,255,0.5);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#backToTop svg {
+  fill: white;
+  width: 28px;
+  height: 28px;
+}
+
+#backToTopLabel {
+  margin-top: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #007bff;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header-container" id="headerContainer">
+  <div class="header">
+    <h2 id="headerTitle">Video Viewer</h2>
+    <div class="input-group">
+      <textarea id="videoUrls" rows="4" placeholder="Paste video URLs (one per line)"></textarea>
+      <button onclick="loadVideos()">Load Videos</button>
+    </div>
+  </div>
+</div>
+
+<div class="spacer"></div>
+
+<div class="container" id="videoList"></div>
+
+<div id="backToTopContainer">
+  <button id="backToTop">
+    <svg viewBox="0 0 24 24">
+      <path d="M12 4l-8 8h5v8h6v-8h5z"/>
+    </svg>
+  </button>
+  <div id="backToTopLabel">BACK TO TOP</div>
+</div>
+
+<script>
+
+// Intersection Observer for autoplay
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const video = entry.target;
+    if(entry.isIntersecting) video.play().catch(()=>{});
+    else video.pause();
+  });
+}, { threshold: 0.6 });
+
+function loadVideos() {
+
+  const text = document.getElementById("videoUrls").value.trim();
+  if(!text) return;
+
+  const urls = text.split("\n");
+  const container = document.getElementById("videoList");
+
+  // FIX: clear previous videos
+  observer.disconnect();
+  container.innerHTML = "";
+
+  urls.forEach((url, index) => {
+
+    const clean = url.trim();
+    if(!clean) return;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "video-item";
+
+    const label = document.createElement("div");
+    label.className = "video-label";
+    label.textContent = `Video ${index + 1}`;
+    wrapper.appendChild(label);
+
+    const video = document.createElement("video");
+    video.src = clean;
+    video.controls = true;
+    video.loading = "lazy";
+
+    observer.observe(video);
+
+    wrapper.appendChild(video);
+
+    const urlBox = document.createElement("div");
+    urlBox.className = "url-box";
+
+    const urlText = document.createElement("div");
+    urlText.className = "url-text";
+    urlText.textContent = clean;
+    urlText.title = clean;
+
+    const copyBtn = document.createElement("button");
+    copyBtn.textContent = "Copy";
+
+    copyBtn.onclick = () => {
+      navigator.clipboard.writeText(clean);
+      copyBtn.textContent = "Copied!";
+      setTimeout(()=>copyBtn.textContent="Copy",1500);
+    }
+
+    urlBox.appendChild(urlText);
+    urlBox.appendChild(copyBtn);
+
+    wrapper.appendChild(urlBox);
+
+    container.appendChild(wrapper);
+
+  });
+
+  if(!window.headerScrollListenerAdded){
+    window.addEventListener('scroll', handleScroll);
+    window.headerScrollListenerAdded = true;
+  }
+
+  adjustSpacer();
+}
+
+// Scroll shrink
+const headerContainer = document.getElementById("headerContainer");
+const headerTitle = document.getElementById("headerTitle");
+const textarea = document.getElementById("videoUrls");
+const button = document.querySelector(".input-group button");
+const backToTopContainer = document.getElementById("backToTopContainer");
+
+function handleScroll() {
+
+  const scrollY = window.scrollY;
+
+  const initialPadding=25, minPadding=5;
+  headerContainer.style.padding = Math.max(initialPadding - scrollY, minPadding) + "px 20px";
+
+  const titleFontInitial = 28, titleFontMin=0;
+  headerTitle.style.fontSize = Math.max(titleFontInitial - scrollY/2, titleFontMin) + "px";
+  headerTitle.style.opacity = Math.max(1 - scrollY/50, 0);
+
+  const fontInitial=16, fontMin=12;
+  textarea.style.fontSize = Math.max(fontInitial - scrollY/10, fontMin) + "px";
+  button.style.fontSize = Math.max(fontInitial - scrollY/10, fontMin) + "px";
+
+  const maxHeightInitial=150, maxHeightMin=80;
+  textarea.style.maxHeight = Math.max(maxHeightInitial - scrollY, maxHeightMin) + "px";
+
+  if(scrollY>300)
+    backToTopContainer.classList.add('visible');
+  else
+    backToTopContainer.classList.remove('visible');
+}
+
+// Spacer
+const spacer = document.querySelector('.spacer');
+
+function adjustSpacer(){
+  spacer.style.height = headerContainer.offsetHeight + 'px';
+}
+
+window.addEventListener('load', adjustSpacer);
+window.addEventListener('resize', adjustSpacer);
+
+// Back to top
+backToTopContainer.addEventListener('click', () => {
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+
+</script>
+
+</body>
+</html>
