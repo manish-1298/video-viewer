@@ -19,10 +19,43 @@ body {
   background: #fff;
   z-index: 1000;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  transition: all 0.2s ease;
+  transition: padding 0.4s ease;
   padding: 25px 20px;
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
+}
+
+/* Compact state after videos are loaded */
+.header-container.loaded {
+  padding: 8px 20px;
+}
+
+.header-container.loaded h2 {
+  font-size: 0 !important;
+  opacity: 0 !important;
+  margin: 0 !important;
+  overflow: hidden;
+}
+
+.header-container.loaded textarea {
+  max-height: 32px !important;
+  min-height: 32px !important;
+  font-size: 12px !important;
+  padding: 6px 10px !important;
+  resize: none;
+}
+
+.header-container.loaded .input-group > button {
+  font-size: 12px !important;
+  padding: 6px 12px !important;
+}
+
+.header-container.loaded #speedControl {
+  height: 12px;
+}
+
+.header-container.loaded #speedValue {
+  font-size: 12px;
 }
 
 .header {
@@ -39,7 +72,8 @@ h2 {
   font-weight: 700;
   font-size: 28px;
   color: #222;
-  transition: all 0.2s ease, opacity 0.2s ease;
+  transition: font-size 0.4s ease, opacity 0.3s ease, margin 0.4s ease;
+  overflow: hidden;
 }
 
 .input-group {
@@ -48,14 +82,14 @@ h2 {
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 textarea {
   width: 70%;
   padding: 12px;
   font-size: 16px;
-  transition: all 0.2s ease;
+  transition: max-height 0.4s ease, font-size 0.3s ease, padding 0.3s ease;
   resize: vertical;
   max-height: 150px;
   border: 1px solid #ddd;
@@ -97,6 +131,86 @@ button:hover {
   text-align: center;
 }
 
+/* ── View Toggle ── */
+.view-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f0f0f0;
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.view-btn {
+  padding: 6px 10px;
+  background: transparent;
+  color: #888;
+  border-radius: 6px;
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+
+.view-btn:hover {
+  background: #e0e0e0;
+  box-shadow: none;
+}
+
+.view-btn.active {
+  background: #007bff;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0,123,255,0.35);
+}
+
+.view-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+/* ── Mute Button ── */
+#muteBtn {
+  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f0f0f0;
+  color: #555;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+#muteBtn:hover { background: #e0e0e0; box-shadow: none; }
+#muteBtn.muted { background: #ff4d4d; color: #fff; box-shadow: 0 2px 6px rgba(255,77,77,0.4); }
+#muteBtn svg { width: 16px; height: 16px; fill: currentColor; flex-shrink: 0; }
+/* ── Loop Button ── */
+#loopBtn {
+  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f0f0f0;
+  color: #555;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+#loopBtn:hover { background: #e0e0e0; box-shadow: none; }
+#loopBtn.looping { background: #28a745; color: #fff; box-shadow: 0 2px 6px rgba(40,167,69,0.4); }
+#loopBtn svg { width: 16px; height: 16px; fill: currentColor; flex-shrink: 0; }
+
+
+/* ── Spacer & Container ── */
 .spacer { height: 0px; }
 
 .container {
@@ -104,14 +218,70 @@ button:hover {
   margin: auto;
   margin-top: 30px;
   padding: 0 10px;
+  transition: all 0.3s ease;
 }
 
-.video-item {
+/* ── List View (default) ── */
+.container.list-view {
+  display: block;
+}
+
+.container.list-view .video-item {
   margin-bottom: 40px;
+}
+
+/* ── Grid View ── */
+.container.grid-view {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  max-width: 100%;
+  padding: 0 12px;
+}
+
+@media (max-width: 600px) {
+  .container.grid-view {
+    grid-template-columns: 1fr;
+  }
+}
+
+.container.grid-view .video-item {
+  margin-bottom: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--header-h, 160px) - 80px);
+  padding: 10px;
+}
+
+.container.grid-view .video-label {
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.container.grid-view .url-box {
+  flex-shrink: 0;
+}
+
+.container.grid-view video {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  object-fit: contain;
+}
+
+/* ── Video Card ── */
+.video-item {
   border-radius: 8px;
   background: #fff;
   padding: 10px;
   box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  transition: box-shadow 0.2s ease;
+}
+
+.video-item:hover {
+  box-shadow: 0 6px 18px rgba(0,0,0,0.13);
 }
 
 .video-label {
@@ -159,6 +329,7 @@ video {
 
 .url-box button:hover { background-color: #0056b3; }
 
+/* ── Back to Top ── */
 #backToTopContainer {
   position: fixed;
   bottom: 24px;
@@ -178,31 +349,33 @@ video {
 }
 
 #backToTop {
-  width: 48px;
-  height: 48px;
-  background-color: #007bff;
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #007bff, #0056b3);
   border-radius: 50%;
-  box-shadow: 0 4px 8px rgba(0,123,255,0.5);
+  box-shadow: 0 4px 14px rgba(0,123,255,0.45), 0 1px 3px rgba(0,0,0,0.15);
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#backToTop:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,123,255,0.55), 0 2px 6px rgba(0,0,0,0.15);
+}
+
+#backToTop:active {
+  transform: translateY(0);
 }
 
 #backToTop svg {
+  width: 52px;
+  height: 52px;
   fill: white;
-  width: 28px;
-  height: 28px;
-}
-
-#backToTopLabel {
-  margin-top: 6px;
-  font-size: 10px;
-  font-weight: 700;
-  color: #007bff;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
+  stroke: none;
 }
 </style>
 </head>
@@ -217,24 +390,106 @@ video {
       <button onclick="loadVideos()">Load Videos</button>
       <input type="range" id="speedControl" min="0.25" max="5" step="0.01" value="1">
       <span id="speedValue">1×</span>
+
+      <!-- View Toggle -->
+      <div class="view-toggle" title="Switch view">
+        <button class="view-btn active" id="listViewBtn" onclick="setView('list')" title="List view">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="5" width="18" height="3" rx="1"/>
+            <rect x="3" y="10.5" width="18" height="3" rx="1"/>
+            <rect x="3" y="16" width="18" height="3" rx="1"/>
+          </svg>
+        </button>
+        <button class="view-btn" id="gridViewBtn" onclick="setView('grid')" title="Grid view">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="3" width="8" height="8" rx="1.5"/>
+            <rect x="13" y="3" width="8" height="8" rx="1.5"/>
+            <rect x="3" y="13" width="8" height="8" rx="1.5"/>
+            <rect x="13" y="13" width="8" height="8" rx="1.5"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Mute Toggle -->
+      <button id="muteBtn" onclick="toggleMute()" title="Toggle mute all videos">
+        <svg id="muteIcon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+        </svg>
+        <span id="muteBtnLabel">Mute</span>
+      </button>
+      <!-- Loop Toggle -->
+      <button id="loopBtn" onclick="toggleLoop()" title="Toggle loop for all videos">
+        <svg id="loopIcon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+        </svg>
+        <span id="loopBtnLabel">Loop</span>
+      </button>
     </div>
   </div>
 </div>
 
 <div class="spacer"></div>
 
-<div class="container" id="videoList"></div>
+<div class="container list-view" id="videoList"></div>
 
 <div id="backToTopContainer">
   <button id="backToTop">
-    <svg viewBox="0 0 24 24">
-      <path d="M12 4l-8 8h5v8h6v-8h5z"/>
+    <svg viewBox="0 0 100 100">
+      <path d="M50 5 L95 52 H68 V95 H32 V52 H5 Z"/>
     </svg>
   </button>
-  <div id="backToTopLabel">BACK TO TOP</div>
 </div>
 
 <script>
+// Current view mode
+let currentView = 'list';
+let isMuted = false;
+let isLooping = false;
+
+function toggleMute() {
+  isMuted = !isMuted;
+  const btn = document.getElementById('muteBtn');
+  const label = document.getElementById('muteBtnLabel');
+  const icon = document.getElementById('muteIcon');
+
+  btn.classList.toggle('muted', isMuted);
+  label.textContent = isMuted ? 'Unmute' : 'Mute';
+  icon.innerHTML = isMuted
+    ? '<path d="M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06A8.99 8.99 0 0 0 17.73 18l1.27 1.27L20.27 18 5.27 3 4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>'
+    : '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>';
+
+  document.querySelectorAll('#videoList video').forEach(v => v.muted = isMuted);
+}
+
+
+function toggleLoop() {
+  isLooping = !isLooping;
+  const btn = document.getElementById('loopBtn');
+  const label = document.getElementById('loopBtnLabel');
+  btn.classList.toggle('looping', isLooping);
+  label.textContent = isLooping ? 'Looping' : 'Loop';
+  document.querySelectorAll('#videoList video').forEach(v => v.loop = isLooping);
+}
+
+function setView(mode) {
+  currentView = mode;
+  const container = document.getElementById('videoList');
+  const listBtn = document.getElementById('listViewBtn');
+  const gridBtn = document.getElementById('gridViewBtn');
+
+  if (mode === 'grid') {
+    container.classList.remove('list-view');
+    container.classList.add('grid-view');
+    gridBtn.classList.add('active');
+    listBtn.classList.remove('active');
+  } else {
+    container.classList.remove('grid-view');
+    container.classList.add('list-view');
+    listBtn.classList.add('active');
+    gridBtn.classList.remove('active');
+  }
+}
+
 // Intersection Observer for autoplay
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
@@ -299,6 +554,8 @@ function loadVideos() {
     video.controls = true;
     video.loading = "lazy";
     video.playbackRate = speed;
+    video.muted = isMuted;
+    video.loop = isLooping;
 
     observer.observe(video);
     wrapper.appendChild(video);
@@ -331,42 +588,38 @@ function loadVideos() {
     window.headerScrollListenerAdded = true;
   }
 
+  // Collapse header
+  headerContainer.classList.add('loaded');
+
   adjustSpacer();
+  setTimeout(adjustSpacer, 450); // re-measure after CSS transition settles
 }
 
 // Scroll shrink
 const headerContainer = document.getElementById("headerContainer");
 const headerTitle = document.getElementById("headerTitle");
 const textarea = document.getElementById("videoUrls");
-const button = document.querySelector(".input-group button");
+const button = document.querySelector(".input-group > button");
 const backToTopContainer = document.getElementById("backToTopContainer");
 
 function handleScroll() {
   const scrollY = window.scrollY;
-  const initialPadding=25, minPadding=5;
-  headerContainer.style.padding = Math.max(initialPadding - scrollY, minPadding) + "px 20px";
 
-  const titleFontInitial = 28, titleFontMin=0;
-  headerTitle.style.fontSize = Math.max(titleFontInitial - scrollY/2, titleFontMin) + "px";
-  headerTitle.style.opacity = Math.max(1 - scrollY/50, 0);
-
-  const fontInitial=16, fontMin=12;
-  textarea.style.fontSize = Math.max(fontInitial - scrollY/10, fontMin) + "px";
-  button.style.fontSize = Math.max(fontInitial - scrollY/10, fontMin) + "px";
-  speedControl.style.height = Math.max(fontMin, fontInitial - scrollY/10) + "px";
-
-  const maxHeightInitial=150, maxHeightMin=80;
-  textarea.style.maxHeight = Math.max(maxHeightInitial - scrollY, maxHeightMin) + "px";
-
-  if(scrollY>300)
+  if(scrollY > 100)
     backToTopContainer.classList.add('visible');
   else
     backToTopContainer.classList.remove('visible');
+
+  document.documentElement.style.setProperty('--header-h', headerContainer.offsetHeight + 'px');
 }
 
 // Spacer
 const spacer = document.querySelector('.spacer');
-function adjustSpacer(){ spacer.style.height = headerContainer.offsetHeight + 'px'; }
+function adjustSpacer(){
+  const h = headerContainer.offsetHeight;
+  spacer.style.height = h + 'px';
+  document.documentElement.style.setProperty('--header-h', h + 'px');
+}
 
 window.addEventListener('load', adjustSpacer);
 window.addEventListener('resize', adjustSpacer);
