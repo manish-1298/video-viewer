@@ -2,637 +2,693 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Video Viewer</title>
 <style>
-body {
-  background: #f5f6fa;
-  color: #333;
-  font-family: Arial, sans-serif;
-  margin: 0;
-}
+  *, *::before, *::after { box-sizing: border-box; }
+  html { overflow-x: hidden; }
 
-.header-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  background: #fff;
-  z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  transition: padding 0.4s ease;
-  padding: 25px 20px;
-  border-bottom-left-radius: 8px;
-  border-bottom-right-radius: 8px;
-}
-
-/* Compact state after videos are loaded */
-.header-container.loaded {
-  padding: 8px 20px;
-}
-
-.header-container.loaded h2 {
-  font-size: 0 !important;
-  opacity: 0 !important;
-  margin: 0 !important;
-  overflow: hidden;
-}
-
-.header-container.loaded textarea {
-  max-height: 32px !important;
-  min-height: 32px !important;
-  font-size: 12px !important;
-  padding: 6px 10px !important;
-  resize: none;
-}
-
-.header-container.loaded .input-group > button {
-  font-size: 12px !important;
-  padding: 6px 12px !important;
-}
-
-.header-container.loaded #speedControl {
-  height: 12px;
-}
-
-.header-container.loaded #speedValue {
-  font-size: 12px;
-}
-
-.header {
-  max-width: 900px;
-  margin: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-h2 {
-  margin: 0 0 10px 0;
-  text-align: center;
-  font-weight: 700;
-  font-size: 28px;
-  color: #222;
-  transition: font-size 0.4s ease, opacity 0.3s ease, margin 0.4s ease;
-  overflow: hidden;
-}
-
-.input-group {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  transition: all 0.3s ease;
-}
-
-textarea {
-  width: 70%;
-  padding: 12px;
-  font-size: 16px;
-  transition: max-height 0.4s ease, font-size 0.3s ease, padding 0.3s ease;
-  resize: vertical;
-  max-height: 150px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: #fff;
-  color: #333;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-  font-family: inherit;
-}
-
-textarea::placeholder { color: #999; }
-
-button {
-  padding: 8px 18px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: all 0.2s ease;
-  border: none;
-  background-color: #007bff;
-  color: #fff;
-  border-radius: 6px;
-  font-weight: 600;
-  box-shadow: 0 2px 6px rgba(0,123,255,0.4);
-}
-
-button:hover {
-  background-color: #0056b3;
-  box-shadow: 0 3px 9px rgba(0,86,179,0.6);
-}
-
-#speedControl {
-  width: 150px;
-}
-
-#speedValue {
-  font-weight: 600;
-  font-size: 16px;
-  min-width: 40px;
-  text-align: center;
-}
-
-/* ── View Toggle ── */
-.view-toggle {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: #f0f0f0;
-  border-radius: 8px;
-  padding: 4px;
-}
-
-.view-btn {
-  padding: 6px 10px;
-  background: transparent;
-  color: #888;
-  border-radius: 6px;
-  box-shadow: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s, color 0.15s;
-}
-
-.view-btn:hover {
-  background: #e0e0e0;
-  box-shadow: none;
-}
-
-.view-btn.active {
-  background: #007bff;
-  color: #fff;
-  box-shadow: 0 2px 6px rgba(0,123,255,0.35);
-}
-
-.view-btn svg {
-  width: 18px;
-  height: 18px;
-  fill: currentColor;
-}
-
-/* ── Mute Button ── */
-#muteBtn {
-  padding: 6px 14px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: #f0f0f0;
-  color: #555;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  box-shadow: none;
-  border: none;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-#muteBtn:hover { background: #e0e0e0; box-shadow: none; }
-#muteBtn.muted { background: #ff4d4d; color: #fff; box-shadow: 0 2px 6px rgba(255,77,77,0.4); }
-#muteBtn svg { width: 16px; height: 16px; fill: currentColor; flex-shrink: 0; }
-/* ── Loop Button ── */
-#loopBtn {
-  padding: 6px 14px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: #f0f0f0;
-  color: #555;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  box-shadow: none;
-  border: none;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-#loopBtn:hover { background: #e0e0e0; box-shadow: none; }
-#loopBtn.looping { background: #28a745; color: #fff; box-shadow: 0 2px 6px rgba(40,167,69,0.4); }
-#loopBtn svg { width: 16px; height: 16px; fill: currentColor; flex-shrink: 0; }
-
-
-/* ── Spacer & Container ── */
-.spacer { height: 0px; }
-
-.container {
-  max-width: 900px;
-  margin: auto;
-  margin-top: 30px;
-  padding: 0 10px;
-  transition: all 0.3s ease;
-}
-
-/* ── List View (default) ── */
-.container.list-view {
-  display: block;
-}
-
-.container.list-view .video-item {
-  margin-bottom: 40px;
-}
-
-/* ── Grid View ── */
-.container.grid-view {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  max-width: 100%;
-  padding: 0 12px;
-}
-
-@media (max-width: 600px) {
-  .container.grid-view {
-    grid-template-columns: 1fr;
+  body {
+    background: #f4f4f4;
+    color: #333;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    max-width: 100vw;
+    overflow-x: hidden;
+    transition: background 0.25s, color 0.25s;
   }
-}
 
-.container.grid-view .video-item {
-  margin-bottom: 0;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - var(--header-h, 160px) - 80px);
-  padding: 10px;
-}
+  /* ── Fixed Header ── */
+  .header-container {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    background: #f4f4f4;
+    z-index: 1000;
+    transition: padding 0.4s ease, box-shadow 0.3s ease;
+    padding: 10px 20px;
+  }
 
-.container.grid-view .video-label {
-  font-size: 13px;
-  flex-shrink: 0;
-}
+  .header-container.loaded {
+    padding: 6px 64px 6px 20px;   /* right gap clears the 36px toggle + 16px offset */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  }
 
-.container.grid-view .url-box {
-  flex-shrink: 0;
-}
+  .header-container.loaded .header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 16px;
+    max-width: none;
+    width: 100%;
+  }
 
-.container.grid-view video {
-  width: 100%;
-  flex: 1;
-  min-height: 0;
-  max-height: none;
-  object-fit: contain;
-}
+  .header-container.loaded .input-group {
+    width: auto;
+    flex: 1;
+    justify-content: flex-start;
+  }
 
-/* ── Video Card ── */
-.video-item {
-  border-radius: 8px;
-  background: #fff;
-  padding: 10px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-  transition: box-shadow 0.2s ease;
-}
+  .header {
+    max-width: 900px;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
 
-.video-item:hover {
-  box-shadow: 0 6px 18px rgba(0,0,0,0.13);
-}
+  h1 {
+    margin: 0.5em 0 0.2em;
+    font-size: 2em;
+    font-weight: 700;
+    color: #333;
+    transition: font-size 0.3s, margin 0.3s, opacity 0.3s;
+  }
 
-.video-label {
-  font-weight: 600;
-  margin-bottom: 6px;
-  color: #000;
-  font-size: 16px;
-  text-align: center;
-}
+  .header-container.loaded h1 {
+    font-size: 15px;
+    opacity: 1;
+    margin: 0;
+    white-space: nowrap;
+    font-weight: 700;
+    color: #333;
+  }
 
-video {
-  width: 100%;
-  max-height: 500px;
-  background: #000;
-  border-radius: 6px;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.15);
-}
+  .input-group {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+    width: 100%;
+    overflow-x: auto;
+  }
 
-.url-box {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 6px;
-  margin-top: 4px;
-}
+  .form-container {
+    background: white;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 50%;
+    max-width: 620px;
+    min-width: 300px;
+    transition: padding 0.3s;
+  }
 
-.url-text {
-  font-size: 12px;
-  color: #555;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: calc(100% - 60px);
-}
+  .header-container.loaded .form-container { padding: 5px 8px; }
 
-.url-box button {
-  padding: 4px 8px;
-  font-size: 12px;
-  background-color: #007bff;
-  color: white;
-  border-radius: 4px;
-  border: none;
-  cursor: pointer;
-}
+  textarea {
+    flex: 1;
+    min-width: 0;
+    height: 50px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    resize: none;
+    font-family: Arial, sans-serif;
+    transition: height 0.3s, font-size 0.3s, padding 0.3s;
+    background: #fff;
+    color: #333;
+  }
 
-.url-box button:hover { background-color: #0056b3; }
+  .header-container.loaded textarea {
+    height: 32px; font-size: 13px; padding: 5px 8px;
+  }
 
-/* ── Back to Top ── */
-#backToTopContainer {
-  position: fixed;
-  bottom: 36px;
-  right: 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  z-index: 1100;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-}
+  button {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-left: 0;
+    font-family: Arial, sans-serif;
+    transition: background 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
 
-#backToTopContainer.visible {
-  opacity: 1;
-  pointer-events: auto;
-}
+  button:hover { background-color: #0056b3; }
 
-#backToTop {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #007bff, #0056b3);
-  border-radius: 50%;
-  box-shadow: 0 4px 14px rgba(0,123,255,0.45), 0 1px 3px rgba(0,0,0,0.15);
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
+  .submit-btn { padding: 8px 16px; font-size: 14px; }
+  .header-container.loaded .submit-btn { padding: 5px 12px; font-size: 13px; }
 
-#backToTop:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0,123,255,0.55), 0 2px 6px rgba(0,0,0,0.15);
-}
+  /* ── Speed wrapper: value above slider ── */
+  #speedWrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    flex-shrink: 0;
+  }
 
-#backToTop:active {
-  transform: translateY(0);
-}
+  #speedValue {
+    font-weight: 600; font-size: 11px;
+    text-align: center; color: #555;
+    font-family: monospace; line-height: 1;
+  }
 
-#backToTop svg {
-  width: 16px;
-  height: 16px;
-  fill: white;
-  stroke: white;
-  stroke-width: 8;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-  overflow: visible;
-}
+  #speedControl {
+    width: 90px; height: 4px;
+    accent-color: #007BFF;
+    cursor: pointer;
+    border: none; padding: 0; background: none; margin-left: 0;
+  }
+
+  /* ── View Toggle ── */
+  .view-toggle {
+    display: flex; align-items: center;
+    gap: 3px; background: #e8e8e8;
+    border-radius: 8px; padding: 3px;
+  }
+
+  .view-btn {
+    padding: 5px 9px; background: transparent; color: #888;
+    border-radius: 5px; box-shadow: none; border: none; margin-left: 0;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background 0.15s, color 0.15s;
+  }
+
+  .view-btn:hover { background: #d8d8d8; box-shadow: none; }
+  .view-btn.active { background: #007BFF; color: #fff; box-shadow: none; }
+  .view-btn svg { width: 16px; height: 16px; fill: currentColor; }
+
+  /* ── Mute / Loop Buttons ── */
+  #muteBtn, #loopBtn {
+    padding: 6px 12px;
+    display: flex; align-items: center; gap: 5px;
+    background: #e8e8e8; color: #555;
+    border-radius: 5px; font-size: 13px; font-weight: 600;
+    box-shadow: none; border: 1px solid #ddd;
+    cursor: pointer; transition: background 0.15s, color 0.15s;
+    margin-left: 0;
+  }
+
+  #muteBtn:hover, #loopBtn:hover { background: #ddd; box-shadow: none; }
+  #muteBtn.muted   { background: #dc3545; color: #fff; border-color: #dc3545; }
+  #loopBtn.looping { background: #28a745; color: #fff; border-color: #28a745; }
+  #muteBtn svg, #loopBtn svg { width: 15px; height: 15px; fill: currentColor; flex-shrink: 0; }
+
+  /* ── Global Video Controls (brightness/contrast) ── */
+  #globalControls {
+    display: none;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  #globalSliders {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+    min-width: 160px;
+  }
+
+  .g-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .g-row label {
+    font-size: 11px;
+    font-weight: bold;
+    color: #555;
+    width: 65px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  .g-row input[type=range] {
+    flex: 1;
+    height: 4px;
+    accent-color: #007BFF;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+    background: none;
+    margin-left: 0;
+    min-width: 80px;
+  }
+
+  .g-row span {
+    font-size: 11px;
+    color: #666;
+    width: 24px;
+    text-align: right;
+    font-family: monospace;
+    flex-shrink: 0;
+  }
+
+  #globalResetBtn {
+    background: #007BFF;
+    border: 1px solid #007BFF;
+    border-radius: 5px;
+    padding: 6px 14px;
+    font-size: 13px;
+    color: white;
+    cursor: pointer;
+    margin-left: 0;
+    flex-shrink: 0;
+    align-self: center;
+    white-space: nowrap;
+  }
+
+  #globalResetBtn:hover { background: #0056b3; }
+
+  /* ── Spacer & Container ── */
+  #headerPlaceholder { flex-shrink: 0; }
+
+  .container {
+    max-width: 900px;
+    margin: auto;
+    padding: 20px 10px 40px;
+    transition: all 0.3s ease;
+  }
+
+  .container.list-view { display: block; }
+
+  /* ── Grid View ── */
+  .container.grid-view {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    max-width: 100%;
+    padding: 20px 12px 40px;
+  }
+
+  @media (max-width: 600px) {
+    .container.grid-view { grid-template-columns: 1fr; }
+  }
+
+  .container.grid-view .video-item {
+    margin-bottom: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - var(--header-h, 160px) - 80px);
+    padding: 10px;
+  }
+
+  .container.grid-view .video-label { font-size: 13px; flex-shrink: 0; }
+  .container.grid-view .url-box { flex-shrink: 0; }
+  .container.grid-view video {
+    width: 100%; flex: 1; min-height: 0; max-height: none; object-fit: contain;
+  }
+
+  /* ── Video Card ── */
+  .video-item {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    margin: 0 auto 20px auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: box-shadow 0.2s;
+  }
+
+  .container.list-view .video-item { max-width: 600px; }
+  .video-item:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.14); }
+
+  .video-label {
+    font-weight: bold; font-size: 13px;
+    margin-bottom: 8px; color: #333;
+    width: 100%; text-align: center;
+  }
+
+  video {
+    width: 100%; max-height: 500px;
+    background: #000; border-radius: 5px;
+  }
+
+  .url-box {
+    display: flex; align-items: center;
+    width: 100%; margin-top: 8px; gap: 5px;
+  }
+
+  .url-text {
+    font-size: 12px; color: #555;
+    overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; flex: 1; text-align: left;
+  }
+
+  .copy-btn {
+    background: #007BFF; border: 1px solid #007BFF;
+    border-radius: 4px; padding: 4px 12px;
+    font-size: 12px; cursor: pointer; color: white;
+    min-width: 60px; height: 26px; margin-left: 0;
+    transition: background 0.2s;
+  }
+
+  .copy-btn:hover { background: #0056b3; border-color: #0056b3; }
+
+  /* ── Back to Top ── */
+  #scrollTopWrapper {
+    position: fixed; bottom: 20px; right: 20px;
+    z-index: 999; display: none;
+    flex-direction: column; align-items: center;
+    cursor: pointer; text-align: center;
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  .scroll-icon {
+    background-color: #00aaff; color: white;
+    font-size: 24px; font-weight: 900;
+    font-family: monospace; border-radius: 50%;
+    width: 40px; height: 40px; line-height: 40px;
+    text-align: center; box-shadow: 0 3px 7px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+  }
+
+  .scroll-icon:hover { background-color: #0077cc; transform: scale(1.05); }
+  .scroll-text { margin-top: 4px; font-size: 10px; color: #007BFF; font-weight: bold; text-transform: uppercase; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Theme Toggle ── */
+  #themeToggle {
+    position: fixed; top: 12px; right: 16px; z-index: 1200;
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1px solid #e0e0e0; background: #ffffff;
+    cursor: pointer; font-size: 17px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.06);
+    transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+    margin-left: 0; padding: 0;
+  }
+
+  #themeToggle:hover {
+    background: #f5f5f5;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+  }
+
+  #themeToggle:active { transform: translateY(0); }
+
+  /* ── Dark Mode ── */
+  body.dark { background: #1a1a1a; color: #f0f0f0; }
+  body.dark h1 { color: #f0f0f0; }
+  body.dark .header-container.loaded h1 { color: #f0f0f0; }
+  body.dark .header-container { background: #1a1a1a; }
+  body.dark .header-container.loaded { box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+  body.dark .form-container { background: #2a2a2a; box-shadow: 0 0 10px rgba(0,0,0,0.4); }
+  body.dark textarea { background: #333; border-color: #444; color: #f0f0f0; }
+  body.dark .video-item { background: #2a2a2a; box-shadow: 0 0 10px rgba(0,0,0,0.4); }
+  body.dark .video-label { color: #ccc; }
+  body.dark .url-text { color: #aaa; }
+  body.dark .view-toggle { background: #333; }
+  body.dark .view-btn:hover { background: #444; }
+  body.dark #muteBtn, body.dark #loopBtn { background: #333; color: #ccc; border-color: #444; }
+  body.dark #muteBtn:hover, body.dark #loopBtn:hover { background: #444; }
+  body.dark #muteBtn.muted   { background: #dc3545; color: #fff; border-color: #dc3545; }
+  body.dark #loopBtn.looping { background: #28a745; color: #fff; border-color: #28a745; }
+  body.dark #speedValue { color: #aaa; }
+  body.dark .g-row label { color: #aaa; }
+  body.dark .g-row span  { color: #aaa; }
+  body.dark #themeToggle { background: #242424; border-color: #383838; box-shadow: 0 1px 4px rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.2); }
+  body.dark #themeToggle:hover { background: #2e2e2e; box-shadow: 0 2px 8px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.3); }
+  body.dark hr { border-color: #333; }
 </style>
 </head>
 
 <body>
 
+<button id="themeToggle" onclick="toggleTheme()" title="Toggle dark/light mode">🌙</button>
+
 <div class="header-container" id="headerContainer">
   <div class="header">
-    <h2 id="headerTitle">Video Viewer</h2>
+    <h1 id="headerTitle">Video Viewer</h1>
     <div class="input-group">
-      <textarea id="videoUrls" rows="4" placeholder="Paste video URLs (one per line)"></textarea>
-      <button onclick="loadVideos()">Load Videos</button>
-      <input type="range" id="speedControl" min="0.25" max="5" step="0.01" value="1">
-      <span id="speedValue">1×</span>
+      <div class="form-container">
+        <textarea id="videoUrls" placeholder="Paste video URLs (one per line)"></textarea>
+        <button class="submit-btn" onclick="loadVideos()">Load Videos</button>
+      </div>
 
-      <!-- View Toggle -->
-      <div class="view-toggle" title="Switch view">
+      <div id="speedWrapper" style="display:none;">
+        <span id="speedValue">1×</span>
+        <input type="range" id="speedControl" min="0.25" max="5" step="0.01" value="1">
+      </div>
+
+      <div class="view-toggle" id="viewToggle" style="display:none;" title="Switch view">
         <button class="view-btn active" id="listViewBtn" onclick="setView('list')" title="List view">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <rect x="3" y="5" width="18" height="3" rx="1"/>
-            <rect x="3" y="10.5" width="18" height="3" rx="1"/>
-            <rect x="3" y="16" width="18" height="3" rx="1"/>
-          </svg>
+          <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="3" rx="1"/><rect x="3" y="10.5" width="18" height="3" rx="1"/><rect x="3" y="16" width="18" height="3" rx="1"/></svg>
         </button>
         <button class="view-btn" id="gridViewBtn" onclick="setView('grid')" title="Grid view">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <rect x="3" y="3" width="8" height="8" rx="1.5"/>
-            <rect x="13" y="3" width="8" height="8" rx="1.5"/>
-            <rect x="3" y="13" width="8" height="8" rx="1.5"/>
-            <rect x="13" y="13" width="8" height="8" rx="1.5"/>
-          </svg>
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>
         </button>
       </div>
 
-      <!-- Mute Toggle -->
-      <button id="muteBtn" onclick="toggleMute()" title="Toggle mute all videos">
-        <svg id="muteIcon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-        </svg>
+      <button id="muteBtn" onclick="toggleMute()" title="Toggle mute all" style="display:none;">
+        <svg id="muteIcon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
         <span id="muteBtnLabel">Mute</span>
       </button>
-      <!-- Loop Toggle -->
-      <button id="loopBtn" onclick="toggleLoop()" title="Toggle loop for all videos">
-        <svg id="loopIcon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
-        </svg>
+
+      <button id="loopBtn" onclick="toggleLoop()" title="Toggle loop for all" style="display:none;">
+        <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
         <span id="loopBtnLabel">Loop</span>
       </button>
+
+      <!-- Global Brightness / Contrast — shown after load -->
+      <div id="globalControls" style="display:none;">
+        <div id="globalSliders">
+          <div class="g-row">
+            <label>Brightness</label>
+            <input type="range" id="globalBrightness" min="-100" max="100" value="0" oninput="applyGlobal()">
+            <span id="globalBrightnessVal">0</span>
+          </div>
+          <div class="g-row">
+            <label>Contrast</label>
+            <input type="range" id="globalContrast" min="-100" max="100" value="0" oninput="applyGlobal()">
+            <span id="globalContrastVal">0</span>
+          </div>
+        </div>
+        <button id="globalResetBtn" onclick="resetGlobal()">Reset</button>
+      </div>
+
     </div>
   </div>
 </div>
 
-<div class="spacer"></div>
+<div id="headerPlaceholder"></div>
 
 <div class="container list-view" id="videoList"></div>
 
-<div id="backToTopContainer">
-  <button id="backToTop">
-    <svg viewBox="8 8 84 84">
-      <path d="M50 8 L92 50 H67 V92 H33 V50 H8 Z"/>
-    </svg>
-  </button>
+<div id="scrollTopWrapper" onclick="scrollToTop()">
+  <div class="scroll-icon">&#x2191;</div>
 </div>
 
 <script>
-// Current view mode
-let currentView = 'list';
-let isMuted = false;
-let isLooping = false;
+  let currentView = 'list';
+  let isMuted = false;
+  let isLooping = false;
 
-function toggleMute() {
-  isMuted = !isMuted;
-  const btn = document.getElementById('muteBtn');
-  const label = document.getElementById('muteBtnLabel');
-  const icon = document.getElementById('muteIcon');
-
-  btn.classList.toggle('muted', isMuted);
-  label.textContent = isMuted ? 'Unmute' : 'Mute';
-  icon.innerHTML = isMuted
-    ? '<path d="M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06A8.99 8.99 0 0 0 17.73 18l1.27 1.27L20.27 18 5.27 3 4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>'
-    : '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>';
-
-  document.querySelectorAll('#videoList video').forEach(v => v.muted = isMuted);
-}
-
-
-function toggleLoop() {
-  isLooping = !isLooping;
-  const btn = document.getElementById('loopBtn');
-  const label = document.getElementById('loopBtnLabel');
-  btn.classList.toggle('looping', isLooping);
-  label.textContent = isLooping ? 'Looping' : 'Loop';
-  document.querySelectorAll('#videoList video').forEach(v => v.loop = isLooping);
-}
-
-function setView(mode) {
-  currentView = mode;
-  const container = document.getElementById('videoList');
-  const listBtn = document.getElementById('listViewBtn');
-  const gridBtn = document.getElementById('gridViewBtn');
-
-  if (mode === 'grid') {
-    container.classList.remove('list-view');
-    container.classList.add('grid-view');
-    gridBtn.classList.add('active');
-    listBtn.classList.remove('active');
-  } else {
-    container.classList.remove('grid-view');
-    container.classList.add('list-view');
-    listBtn.classList.add('active');
-    gridBtn.classList.remove('active');
+  function toggleTheme() {
+    const isDark = document.body.classList.toggle('dark');
+    document.getElementById('themeToggle').textContent = isDark ? '☀️' : '🌙';
   }
-}
 
-// Intersection Observer for autoplay
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    const video = entry.target;
-    if(entry.isIntersecting) video.play().catch(()=>{});
-    else video.pause();
-  });
-}, { threshold: 0.6 });
+  function toggleMute() {
+    isMuted = !isMuted;
+    const btn = document.getElementById('muteBtn');
+    document.getElementById('muteBtnLabel').textContent = isMuted ? 'Unmute' : 'Mute';
+    document.getElementById('muteIcon').innerHTML = isMuted
+      ? '<path d="M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06A8.99 8.99 0 0 0 17.73 18l1.27 1.27L20.27 18 5.27 3 4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>'
+      : '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>';
+    btn.classList.toggle('muted', isMuted);
+    document.querySelectorAll('#videoList video').forEach(v => v.muted = isMuted);
+  }
 
-const speedControl = document.getElementById('speedControl');
-const speedValue = document.getElementById('speedValue');
+  function toggleLoop() {
+    isLooping = !isLooping;
+    const btn = document.getElementById('loopBtn');
+    btn.classList.toggle('looping', isLooping);
+    document.getElementById('loopBtnLabel').textContent = isLooping ? 'Looping' : 'Loop';
+    document.querySelectorAll('#videoList video').forEach(v => v.loop = isLooping);
+  }
 
-// Fixed steps for snapping
-const snapSteps = [];
-for(let s = 0.25; s <= 5; s += 0.25) snapSteps.push(parseFloat(s.toFixed(2)));
+  function setView(mode) {
+    currentView = mode;
+    const container = document.getElementById('videoList');
+    const listBtn = document.getElementById('listViewBtn');
+    const gridBtn = document.getElementById('gridViewBtn');
+    if (mode === 'grid') {
+      container.classList.replace('list-view', 'grid-view');
+      gridBtn.classList.add('active'); listBtn.classList.remove('active');
+    } else {
+      container.classList.replace('grid-view', 'list-view');
+      listBtn.classList.add('active'); gridBtn.classList.remove('active');
+    }
+  }
 
-function snapSpeed(value) {
-  let closest = snapSteps.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
-  return closest;
-}
+  /* ── Global Brightness / Contrast ── */
+  function applyGlobal() {
+    const b = parseInt(document.getElementById('globalBrightness').value);
+    const c = parseInt(document.getElementById('globalContrast').value);
+    document.getElementById('globalBrightnessVal').textContent = b;
+    document.getElementById('globalContrastVal').textContent   = c;
+    const filter = `brightness(${(b + 100) / 100}) contrast(${(c + 100) / 100})`;
+    document.querySelectorAll('#videoList video').forEach(v => v.style.filter = filter);
+  }
 
-// Update playback speed of all videos
-function updatePlaybackSpeed() {
-  const rawValue = parseFloat(speedControl.value);
-  const snapped = snapSpeed(rawValue);
-  speedControl.value = snapped;
-  speedValue.textContent = snapped + "×";
+  function resetGlobal() {
+    document.getElementById('globalBrightness').value = 0;
+    document.getElementById('globalContrast').value   = 0;
+    document.getElementById('globalBrightnessVal').textContent = 0;
+    document.getElementById('globalContrastVal').textContent   = 0;
+    document.querySelectorAll('#videoList video').forEach(v => v.style.filter = '');
+  }
 
-  const videos = document.querySelectorAll('#videoList video');
-  videos.forEach(video => video.playbackRate = snapped);
-}
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const video = entry.target;
+      if (entry.isIntersecting) video.play().catch(() => {});
+      else video.pause();
+    });
+  }, { threshold: 0.6 });
 
-speedControl.addEventListener('input', updatePlaybackSpeed);
+  const speedControl = document.getElementById('speedControl');
+  const speedValue   = document.getElementById('speedValue');
 
-function loadVideos() {
-  const text = document.getElementById("videoUrls").value.trim();
-  if(!text) return;
+  const snapSteps = [];
+  for (let s = 0.25; s <= 5; s += 0.25) snapSteps.push(parseFloat(s.toFixed(2)));
 
-  const urls = text.split("\n");
-  const container = document.getElementById("videoList");
+  function snapSpeed(value) {
+    return snapSteps.reduce((prev, curr) =>
+      Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
+  }
 
-  // clear previous videos
-  observer.disconnect();
-  container.innerHTML = "";
+  function updatePlaybackSpeed() {
+    const snapped = snapSpeed(parseFloat(speedControl.value));
+    speedControl.value = snapped;
+    speedValue.textContent = snapped + '×';
+    document.querySelectorAll('#videoList video').forEach(v => v.playbackRate = snapped);
+  }
 
-  const speed = snapSpeed(parseFloat(speedControl.value));
+  speedControl.addEventListener('input', updatePlaybackSpeed);
 
-  urls.forEach((url, index) => {
-    const clean = url.trim();
-    if(!clean) return;
+  function copyUrl(btn, url) {
+    navigator.clipboard.writeText(url).then(() => {
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 1500);
+    });
+  }
 
-    const wrapper = document.createElement("div");
-    wrapper.className = "video-item";
+  function loadVideos() {
+    const text = document.getElementById('videoUrls').value.trim();
+    if (!text) return;
 
-    const label = document.createElement("div");
-    label.className = "video-label";
-    label.textContent = `Video ${index + 1}`;
-    wrapper.appendChild(label);
+    const urls = text.split('\n');
+    const container = document.getElementById('videoList');
+    observer.disconnect();
+    container.innerHTML = '';
 
-    const video = document.createElement("video");
-    video.src = clean;
-    video.controls = true;
-    video.loading = "lazy";
-    video.playbackRate = speed;
-    video.muted = isMuted;
-    video.loop = isLooping;
+    const speed = snapSpeed(parseFloat(speedControl.value));
 
-    observer.observe(video);
-    wrapper.appendChild(video);
+    urls.forEach((url, index) => {
+      const clean = url.trim();
+      if (!clean) return;
 
-    const urlBox = document.createElement("div");
-    urlBox.className = "url-box";
+      const wrapper = document.createElement('div');
+      wrapper.className = 'video-item';
 
-    const urlText = document.createElement("div");
-    urlText.className = "url-text";
-    urlText.textContent = clean;
-    urlText.title = clean;
+      const label = document.createElement('div');
+      label.className = 'video-label';
+      label.textContent = `Video ${index + 1}`;
+      wrapper.appendChild(label);
 
-    const copyBtn = document.createElement("button");
-    copyBtn.textContent = "Copy";
-    copyBtn.onclick = () => {
-      navigator.clipboard.writeText(clean);
-      copyBtn.textContent = "Copied!";
-      setTimeout(()=>copyBtn.textContent="Copy",1500);
+      const video = document.createElement('video');
+      video.src = clean;
+      video.controls = true;
+      video.loading = 'lazy';
+      video.playbackRate = speed;
+      video.muted = isMuted;
+      video.loop  = isLooping;
+
+      /* Apply current global filter to newly loaded videos */
+      const b = parseInt(document.getElementById('globalBrightness').value);
+      const c = parseInt(document.getElementById('globalContrast').value);
+      if (b !== 0 || c !== 0) {
+        video.style.filter = `brightness(${(b + 100) / 100}) contrast(${(c + 100) / 100})`;
+      }
+
+      observer.observe(video);
+      wrapper.appendChild(video);
+
+      const urlBox = document.createElement('div');
+      urlBox.className = 'url-box';
+
+      const urlText = document.createElement('div');
+      urlText.className = 'url-text';
+      urlText.textContent = clean;
+      urlText.title = clean;
+
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'copy-btn';
+      copyBtn.textContent = 'Copy';
+      copyBtn.onclick = () => copyUrl(copyBtn, clean);
+
+      urlBox.appendChild(urlText);
+      urlBox.appendChild(copyBtn);
+      wrapper.appendChild(urlBox);
+      container.appendChild(wrapper);
+    });
+
+    /* Show controls and collapse header */
+    document.getElementById('speedWrapper').style.display   = 'flex';
+    document.getElementById('viewToggle').style.display     = 'flex';
+    document.getElementById('muteBtn').style.display        = 'flex';
+    document.getElementById('loopBtn').style.display        = 'flex';
+    document.getElementById('globalControls').style.display = 'flex';
+    headerContainer.classList.add('loaded');
+    resetGlobal();
+
+    if (!window.headerScrollListenerAdded) {
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      window.headerScrollListenerAdded = true;
     }
 
-    urlBox.appendChild(urlText);
-    urlBox.appendChild(copyBtn);
-
-    wrapper.appendChild(urlBox);
-    container.appendChild(wrapper);
-  });
-
-  if(!window.headerScrollListenerAdded){
-    window.addEventListener('scroll', handleScroll);
-    window.headerScrollListenerAdded = true;
+    adjustSpacer();
+    setTimeout(adjustSpacer, 450);
   }
 
-  // Collapse header
-  headerContainer.classList.add('loaded');
+  const headerContainer = document.getElementById('headerContainer');
+  const placeholder     = document.getElementById('headerPlaceholder');
 
+  function adjustSpacer() {
+    const h = headerContainer.offsetHeight;
+    placeholder.style.height = h + 'px';
+    document.documentElement.style.setProperty('--header-h', h + 'px');
+  }
+
+  function handleScroll() {
+    document.getElementById('scrollTopWrapper').style.display =
+      window.scrollY > 80 ? 'flex' : 'none';
+    document.documentElement.style.setProperty('--header-h', headerContainer.offsetHeight + 'px');
+  }
+
+  function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+  window.addEventListener('load',   adjustSpacer);
+  window.addEventListener('resize', adjustSpacer);
   adjustSpacer();
-  setTimeout(adjustSpacer, 450); // re-measure after CSS transition settles
-}
-
-// Scroll shrink
-const headerContainer = document.getElementById("headerContainer");
-const headerTitle = document.getElementById("headerTitle");
-const textarea = document.getElementById("videoUrls");
-const button = document.querySelector(".input-group > button");
-const backToTopContainer = document.getElementById("backToTopContainer");
-
-function handleScroll() {
-  const scrollY = window.scrollY;
-
-  if(scrollY > 100)
-    backToTopContainer.classList.add('visible');
-  else
-    backToTopContainer.classList.remove('visible');
-
-  document.documentElement.style.setProperty('--header-h', headerContainer.offsetHeight + 'px');
-}
-
-// Spacer
-const spacer = document.querySelector('.spacer');
-function adjustSpacer(){
-  const h = headerContainer.offsetHeight;
-  spacer.style.height = h + 'px';
-  document.documentElement.style.setProperty('--header-h', h + 'px');
-}
-
-window.addEventListener('load', adjustSpacer);
-window.addEventListener('resize', adjustSpacer);
-
-// Back to top
-backToTopContainer.addEventListener('click', () => {
-  window.scrollTo({top:0, behavior:'smooth'});
-});
 </script>
-
 </body>
 </html>
